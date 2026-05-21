@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oversee — Control Center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="shell">
+
+        <!-- ── SIDEBAR ─────────────────────────────────────── -->
+        <aside class="sidebar" id="sidebar">
+            <div class="brand">
+                <span class="brand-icon"><i class="fa-solid fa-shield-halved"></i></span>
+                <div class="brand-text">
+                    <span class="brand-name">OVERSEE</span>
+                    <span class="brand-ver">v2.1.0</span>
+                </div>
+                <span class="plan-chip premium">PRO</span>
+            </div>
+
+            <div class="bot-status-bar" id="bot-status-bar">
+                <span class="pulse-dot online" id="status-dot"></span>
+                <span class="mono" id="status-label">Conectando...</span>
+                <span class="ping-chip mono" id="val-ping">-- ms</span>
+            </div>
+
+            <nav class="nav">
+                <p class="nav-section-label">MÉTRICAS</p>
+                <a href="#" class="nav-link active" data-target="view-dashboard">
+                    <i class="fa-solid fa-signal"></i><span>Dashboard</span>
+                </a>
+
+                <p class="nav-section-label">CORE</p>
+                <a href="#" class="nav-link" data-target="view-general">
+                    <i class="fa-solid fa-sliders"></i><span>General</span>
+                </a>
+                <a href="#" class="nav-link" data-target="view-security">
+                    <i class="fa-solid fa-shield-virus"></i><span>Automod</span>
+                </a>
+                <a href="#" class="nav-link" data-target="view-logs">
+                    <i class="fa-solid fa-scroll"></i><span>Logs</span>
+                </a>
+                <a href="#" class="nav-link" data-target="view-tickets">
+                    <i class="fa-solid fa-ticket"></i><span>Tickets</span>
+                </a>
+                <a href="#" class="nav-link" data-target="view-commands">
+                    <i class="fa-solid fa-terminal"></i><span>Comandos</span>
+                </a>
+                <a href="#" class="nav-link" data-target="view-welcome">
+                    <i class="fa-solid fa-door-open"></i><span>Bienvenidas</span>
+                </a>
+                <a href="#" class="nav-link" data-target="view-levels">
+                    <i class="fa-solid fa-chart-bar"></i><span>Niveles</span>
+                    <span class="lock-chip"><i class="fa-solid fa-lock"></i></span>
+                </a>
+
+                <p class="nav-section-label">PREMIUM</p>
+                <a href="#" class="nav-link premium-nav" data-target="view-premium">
+                    <i class="fa-solid fa-star"></i><span>Planes</span>
+                </a>
+                <a href="https://nose-web.netlify.app/contacto" target="_blank" class="nav-link muted">
+                    <i class="fa-solid fa-headset"></i><span>Soporte</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- ── MAIN ────────────────────────────────────────── -->
+        <div class="main-wrap">
+
+            <!-- TOP BAR -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <div class="server-pill">
+                        <div class="server-icon mono">CP</div>
+                        <div>
+                            <div class="server-name">Cliente Principal</div>
+                            <div class="server-id mono" id="guild-id-display">ID: cargando...</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <div class="ws-indicator" id="ws-indicator">
+                        <span class="pulse-dot offline" id="ws-dot"></span>
+                        <span class="mono" id="ws-label">WebSocket</span>
+                    </div>
+                    <button class="btn-save" id="btn-global-save">
+                        <i class="fa-solid fa-floppy-disk"></i> Guardar
+                    </button>
+                </div>
+            </header>
+
+            <!-- ── VIEWS ───────────────────────────────────── -->
+            <div class="content-area">
+
+                <!-- DASHBOARD -->
+                <section id="view-dashboard" class="view active">
+                    <div class="view-header">
+                        <h1>Dashboard</h1>
+                        <span class="view-subtitle mono">Estado operativo en tiempo real</span>
+                    </div>
+
+                    <div class="metrics-row">
+                        <div class="metric-card" id="metric-members">
+                            <div class="metric-label">MIEMBROS</div>
+                            <div class="metric-val mono" id="val-members">--</div>
+                            <div class="metric-icon"><i class="fa-solid fa-users"></i></div>
+                        </div>
+                        <div class="metric-card red" id="metric-threats">
+                            <div class="metric-label">AMENAZAS HOY</div>
+                            <div class="metric-val mono" id="val-threats">--</div>
+                            <div class="metric-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        </div>
+                        <div class="metric-card amber" id="metric-tickets">
+                            <div class="metric-label">TICKETS ABIERTOS</div>
+                            <div class="metric-val mono" id="val-tickets">--</div>
+                            <div class="metric-icon"><i class="fa-solid fa-ticket"></i></div>
+                        </div>
+                        <div class="metric-card green" id="metric-online">
+                            <div class="metric-label">ONLINE AHORA</div>
+                            <div class="metric-val mono" id="val-online">--</div>
+                            <div class="metric-icon"><i class="fa-solid fa-circle-dot"></i></div>
+                        </div>
+                    </div>
+
+                    <div class="dash-grid">
+                        <div class="panel chart-panel">
+                            <div class="panel-head">
+                                <span>Actividad — últimas 7 horas</span>
+                                <div class="chart-legend">
+                                    <span class="legend-dot blue"></span><span>Mensajes</span>
+                                    <span class="legend-dot red" style="margin-left:1rem"></span><span>Amenazas</span>
+                                </div>
+                            </div>
+                            <div class="chart-wrap"><canvas id="activityChart"></canvas></div>
+                        </div>
+
+                        <div class="panel log-panel">
+                            <div class="panel-head">
+                                <span>Feed en vivo</span>
+                                <span class="live-chip"><span class="blink-dot"></span> LIVE</span>
+                            </div>
+                            <div class="log-stream" id="live-logs"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- GENERAL -->
+                <section id="view-general" class="view">
+                    <div class="view-header">
+                        <h1>Ajustes Generales</h1>
+                        <span class="view-subtitle mono">Bienvenidas, autoroles, prefijos</span>
+                    </div>
+                    <div class="config-grid">
+                        <!-- Bienvenidas -->
+                        <div class="panel p4">
+                            <div class="panel-head toggle-head">
+                                <span>Mensajes de Bienvenida</span>
+                                <label class="tog"><input type="checkbox" id="tog-welcome" checked><span class="tog-track"></span></label>
+                            </div>
+                            <div class="field-stack mt3">
+                                <div class="field">
+                                    <label>Canal</label>
+                                    <select class="inp" id="welcome-channel">
+                                        <option value="1468368663500427356">#staff-bienvenida</option>
+                                        <option value="1468369122491367652">#vips-bienvenida</option>
+                                        <option value="1482542305721454842">#bienvenida-legal</option>
+                                    </select>
+                                </div>
+                                <div class="field">
+                                    <label>Mensaje <span class="hint">— usa {user} {server} {count}</span></label>
+                                    <textarea class="inp" id="welcome-message" rows="3">¡Bienvenido {user} a {server}! Eres el miembro número {count}. Lee las reglas.</textarea>
+                                </div>
+                                <div class="field">
+                                    <label>Color del embed</label>
+                                    <div class="color-row">
+                                        <input type="color" class="color-pick" id="welcome-color" value="#6366f1">
+                                        <span class="mono" id="welcome-color-label">#6366f1</span>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label>Imagen de cabecera (URL, opcional)</label>
+                                    <input type="text" class="inp" id="welcome-img" placeholder="https://i.imgur.com/...">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Auto-roles -->
+                        <div class="panel p4">
+                            <div class="panel-head toggle-head">
+                                <span>Auto-Roles al unirse</span>
+                                <label class="tog"><input type="checkbox" id="tog-autorole"><span class="tog-track"></span></label>
+                            </div>
+                            <div class="field-stack mt3">
+                                <div class="field">
+                                    <label>Rol para usuarios nuevos</label>
+                                    <select class="inp" id="autorole-user"><option>@Miembro</option><option>@Usuario</option></select>
+                                </div>
+                                <div class="field">
+                                    <label>Rol para bots nuevos</label>
+                                    <select class="inp" id="autorole-bot"><option>@Bot</option><option>Sin rol</option></select>
+                                </div>
+                                <div class="field">
+                                    <label>Mensaje de asignación (DM al usuario)</label>
+                                    <textarea class="inp" rows="2" id="autorole-dm" placeholder="Deja vacío para no enviar DM"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Prefijo del bot -->
+                        <div class="panel p4">
+                            <div class="panel-head"><span>Comportamiento del Bot</span></div>
+                            <div class="field-stack mt3">
+                                <div class="field">
+                                    <label>Prefijo de comandos</label>
+                                    <input type="text" class="inp inp-sm" id="bot-prefix" value="!" maxlength="5" style="width:80px">
+                                </div>
+                                <div class="field">
+                                    <label>Lenguaje de respuestas</label>
+                                    <select class="inp" id="bot-lang">
+                                        <option value="es" selected>Español</option>
+                                        <option value="en">English</option>
+                                    </select>
+                                </div>
+                                <div class="field toggle-row">
+                                    <label>Responder a DMs</label>
+                                    <label class="tog"><input type="checkbox" id="tog-dms"><span class="tog-track"></span></label>
+                                </div>
+                                <div class="field toggle-row">
+                                    <label>Modo silencioso (sin confirmaciones)</label>
+                                    <label class="tog"><input type="checkbox" id="tog-quiet"><span class="tog-track"></span></label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Despedidas -->
+                        <div class="panel p4">
+                            <div class="panel-head toggle-head">
+                                <span>Mensajes de Despedida</span>
+                                <label class="tog"><input type="checkbox" id="tog-bye"><span class="tog-track"></span></label>
+                            </div>
+                            <div class="field-stack mt3">
+                                <div class="field">
+                                    <label>Canal</label>
+                                    <select class="inp" id="bye-channel">
+                                        <option>#general</option>
+                                        <option>#despedidas</option>
+                                    </select>
+                                </div>
+                                <div class="field">
+                                    <label>Mensaje</label>
+                                    <textarea class="inp" id="bye-message" rows="2">{user} ha abandonado el servidor. Nos quedamos {count} miembros.</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="save-row">
+                        <button class="btn-primary" data-save="general"><i class="fa-solid fa-cloud-arrow-up"></i> Aplicar al bot</button>
+                    </div>
+                </section>
+
+                <!-- AUTOMOD / SECURITY -->
+                <section id="view-security" class="view">
+                    <div class="view-header">
+                        <h1>Motor de Automod</h1>
+                        <span class="view-subtitle mono">Control de filtros, límites y castigos</span>
+                    </div>
+                    <div class="config-grid">
+                        <!-- Anti-Spam -->
+                        <div class="panel p4">
+                            <div class="panel-head toggle-head">
+                                <span>Anti-Spam</span>
+                                <label class="tog"><input type="checkbox" id="tog-antispam" checked><span class="tog-track"></span></label>
+                            </div>
+                            <div class="field-stack mt3">
+                                <div class="field">
+                                    <label>Límite de mensajes</label>
+                                    <div class="inline-inputs">
+                                        <input type="number" class="inp inp-sm" id="spam-limit" value="5" min="2" max="20"> mensajes en
+                                        <input type="number" class="inp inp-sm" id="spam-window" value="3" min="1" max="10"> segundos
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label>Castigo automático</label>
+                                    <select class="inp" id="spam-action">
+                                        <option value="delete">Solo borrar</option>
+                                        <option value="mute" selected>Mute (Timeout)</option>
+                                        <option value="kick">Expulsión</option>
+                                        <option value="ban">Baneo permanente</option>
+                                    </select>
+                                </div>
+                                <div class="field">
+                                    <label>Duración del timeout</label>
+                                    <select class="inp" id="spam-timeout">
+                                        <option value="60">1 minuto</option>
+                                        <option value="300" selected>5 minutos</option>
+                                        <option value="1800">30 minutos</option>
+                                        <option value="3600">1 hora</option>
+                                        <option value="86400">1 día</option>
+                                    </select>
+                                </div>
+                                <div class="field toggle-row">
+                                    <label>Avisar en DM al usuario</label>
+                                    <label class="tog"><input type="checkbox" id="spam-dm" checked><span class="tog-track"></span></label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Anti-Links -->
+                        <div class="panel p4">
+                            <div class="panel-head toggle-head">
+                                <span>Filtro de Links</span>
+                                <label class="tog"><input type="checkbox" id="tog-antilinks" checked><span class="tog-track"></span></label>
+                            </div>
+                            <div class="field-stack mt3">
+                                <div class="field">
+                                    <label>Modo</label>
+                                    <select class="inp" id="links-mode">
+                                        <option value="malicious" selected>Solo links maliciosos (Grabify, discord.gift)</option>
+                                        <option value="external">Todos los externos (no discord.com)</option>
+                                        <option value="all">Todos los links</option>
+                                    </select>
+                                </div>
+                                <div class="field toggle-row">
+                                    <label>Permitir imágenes/adjuntos</label>
+                                    <label class="tog"><input type="checkbox" id="links-allow-media" checked><span class="tog-track"></span></label>
+                                </div>
+                                <div class="field toggle-row">
+                                    <label>Permitir links de YouTube/Twitch</label>
+                                    <label class="tog"><input type="checkbox" id="links-allow-trusted" checked><span class="tog-track"></span></label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Filtro de palabras -->
+                        <div class="panel p4">
+                            <div class="panel-head toggle-head">
+                                <span>Lista Negra de Palabras</span>
+                                <label class="tog"><input type="checkbox" id="tog-wordfilter" checked><span class="tog-track"></span></label>
+                            </div>
+                            <div class="field-stack mt3">
+                                <div class="field">
+                                    <label>Palabras bloqueadas <span class="hint">— separadas por coma</span></label>
+                                    <textarea class="inp mono" id="blacklist-words" rows="4" placeholder="palabra1, insulto, spam..."></textarea>
+                                </div>
+                                <div class="field">
+                                    <label>Acción al detectar</label>
+                                    <select class="inp" id="wordfilter-action">
+                                        <option value="delete" selected>Borrar mensaje</option>
+                                        <option value="delete+warn">Borrar + avisar</option>
+                                        <option value="delete+mute">Borrar + mutear</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Anti-Raid -->
+                        <div class="panel p4">
+                            <div class="panel-head toggle-head">
+                                <span>Protección Anti-Raid</span>
+                                <label class="tog"><input type="checkbox" id="tog-antiraid"><span class="tog-track"></span></label>
+                            </div>
+                            <div class="field-stack mt3">
+                                <div class="field">
+                                    <label>Umbral de entradas sospechosas</label>
+                                    <div class="inline-inputs">
+                                        <input type="number" class="inp inp-sm" id="raid-limit" value="10" min="3"> usuarios en
+                                        <input type="number" class="inp inp-sm" id="raid-window" value="10"> segundos
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label>Acción anti-raid</label>
+                                    <select class="inp" id="raid-action">
+                                        <option value="lockdown">Lockdown automático</option>
+                                        <option value="verification">Activar verificación</option>
+                                        <option value="notify">Solo notificar al staff</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Roles inmunes -->
+                        <div class="panel p4" style="grid-column: 1/-1">
+                            <div class="panel-head"><span>Roles Inmunes al Automod</span></div>
+                            <div class="field-stack mt3">
+                                <div class="field">
+                                    <label>Selecciona los roles que ignoran todos los filtros</label>
+                                    <select class="inp" id="immune-roles" multiple style="height:80px">
+                                        <option selected>@Administrador</option>
+                                        <option selected>@Moderador</option>
+                                        <option>@VIP</option>
+                                        <option>@Staff</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="save-row">
+                        <button class="btn-primary" data-save="security"><i class="fa-solid fa-cloud-arrow-up"></i> Aplicar al bot</button>
+                    </div>
+                </section>
+
+                <!-- LOGS -->
+                <section id="view-logs" class="view">
+                    <div class="view-header">
+                        <h1>Sistema de Logs</h1>
+                        <span class="view-subtitle mono">Canales de auditoría por categoría</span>
+                    </div>
+                    <div class="panel p4">
+                        <div class="logs-table">
+                            <div class="log-row">
+                                <div class="log-meta">
+                                    <span class="log-type-icon red"><i class="fa-solid fa-gavel"></i></span>
+                                    <div>
+                                        <div class="log-title">Logs de Moderación</div>
+                                        <div class="log-desc mono">Baneos, kicks, mutes, warns, unbans</div>
+                                    </div>
+                                </div>
+                                <div class="log-controls">
+                                    <label class="tog"><input type="checkbox" id="log-mod-enabled" checked><span class="tog-track"></span></label>
+                                    <select class="inp inp-sm" id="log-mod-channel"><option>#mod-logs</option><option>Desactivado</option></select>
+                                </div>
+                            </div>
+                            <div class="log-row">
+                                <div class="log-meta">
+                                    <span class="log-type-icon blue"><i class="fa-solid fa-message"></i></span>
+                                    <div>
+                                        <div class="log-title">Logs de Mensajes</div>
+                                        <div class="log-desc mono">Borrados, editados, bulk-delete</div>
+                                    </div>
+                                </div>
+                                <div class="log-controls">
+                                    <label class="tog"><input type="checkbox" id="log-msg-enabled" checked><span class="tog-track"></span></label>
+                                    <select class="inp inp-sm" id="log-msg-channel"><option>#message-logs</option><option>Desactivado</option></select>
+                                </div>
+                            </div>
+                            <div class="log-row">
+                                <div class="log-meta">
+                                    <span class="log-type-icon green"><i class="fa-solid fa-user-plus"></i></span>
+                                    <div>
+                                        <div class="log-title">Logs de Miembros</div>
+                                        <div class="log-desc mono">Uniones, salidas, cambios de nick</div>
+                                    </div>
+                                </div>
+                                <div class="log-controls">
+                                    <label class="tog"><input type="checkbox" id="log-member-enabled" checked><span class="tog-track"></span></label>
+                                    <select class="inp inp-sm" id="log-member-channel"><option>#member-logs</option><option>Desactivado</option></select>
+                                </div>
+                            </div>
+                            <div class="log-row">
+                                <div class="log-meta">
+                                    <span class="log-type-icon amber"><i class="fa-solid fa-server"></i></span>
+                                    <div>
+                                        <div class="log-title">Logs del Servidor</div>
+                                        <div class="log-desc mono">Canales creados, roles modificados</div>
+                                    </div>
+                                </div>
+                                <div class="log-controls">
+                                    <label class="tog"><input type="checkbox" id="log-server-enabled"><span class="tog-track"></span></label>
+                                    <select class="inp inp-sm" id="log-server-channel"><option>#server-logs</option><option>Desactivado</option></select>
+                                </div>
+                            </div>
+                            <div class="log-row">
+                                <div class="log-meta">
+                                    <span class="log-type-icon violet"><i class="fa-solid fa-microphone"></i></span>
+                                    <div>
+                                        <div class="log-title">Logs de Voz</div>
+                                        <div class="log-desc mono">Entradas, salidas, moves entre canales</div>
+                                    </div>
+                                </div>
+                                <div class="log-controls">
+                                    <label class="tog"><input type="checkbox" id="log-voice-enabled"><span class="tog-track"></span></label>
+                                    <select class="inp inp-sm" id="log-voice-channel"><option>#voice-logs</option><option>Desactivado</option></select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="save-row">
+                        <button class="btn-primary" data-save="logs"><i class="fa-solid fa-cloud-arrow-up"></i> Aplicar al bot</button>
+                    </div>
+                </section>
+
+                <!-- TICKETS -->
+                <section id="view-tickets" class="view">
+                    <div class="view-header">
+                        <h1>Sistema de Tickets</h1>
+                        <span class="view-subtitle mono">Configuración completa del soporte</span>
+                    </div>
+                    <div class="config-grid">
+                        <div class="panel p4">
+                            <div class="panel-head"><span>Canales y Roles</span></div>
+                            <div class="field-stack mt3">
+                                <div class="field">
+                                    <label>Categoría de tickets</label>
+                                    <select class="inp" id="ticket-category"><option>— CATEGORÍA TICKETS —</option></select>
+                                </div>
+                                <div class="field">
+                                    <label>Canal de transcripciones</label>
+                                    <select class="inp" id="ticket-transcripts"><option>#transcripciones</option></select>
+                                </div>
+                                <div class="field">
+                                    <label>Rol de soporte (ve todos los tickets)</label>
+                                    <select class="inp" id="ticket-staff-role"><option>@Support Team</option><option>@Admin</option></select>
+                                </div>
+                                <div class="field">
+                                    <label>Máx. tickets por usuario</label>
+                                    <input type="number" class="inp inp-sm" id="ticket-max" value="1" min="1" max="5">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel p4">
+                            <div class="panel-head"><span>Mensaje Interno del Ticket</span></div>
+                            <div class="field-stack mt3">
+                                <div class="field">
+                                    <label>Título del embed</label>
+                                    <input type="text" class="inp" id="ticket-embed-title" value="Soporte Técnico">
+                                </div>
+                                <div class="field">
+                                    <label>Descripción <span class="hint">— usa {user}</span></label>
+                                    <textarea class="inp" id="ticket-embed-body" rows="3">¡Hola {user}! Explica tu problema y un miembro del equipo te atenderá pronto.</textarea>
+                                </div>
+                                <div class="field">
+                                    <label>Color del embed</label>
+                                    <div class="color-row">
+                                        <input type="color" class="color-pick" id="ticket-color" value="#6366f1">
+                                        <span class="mono" id="ticket-color-label">#6366f1</span>
+                                    </div>
+                                </div>
+                                <div class="field toggle-row">
+                                    <label>Ping al @rol soporte al crear ticket</label>
+                                    <label class="tog"><input type="checkbox" id="ticket-ping-staff" checked><span class="tog-track"></span></label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel p4" style="grid-column:1/-1">
+                            <div class="panel-head"><span>Panel de Tickets Activos</span></div>
+                            <div class="ticket-list" id="ticket-list">
+                                <div class="table-wrap">
+                                    <table class="data-table">
+                                        <thead><tr>
+                                            <th>ID</th><th>Usuario</th><th>Categoría</th><th>Estado</th><th>Tiempo</th><th></th>
+                                        </tr></thead>
+                                        <tbody id="tickets-tbody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="save-row">
+                        <button class="btn-primary" data-save="tickets"><i class="fa-solid fa-cloud-arrow-up"></i> Aplicar al bot</button>
+                    </div>
+                </section>
+
+                <!-- COMANDOS -->
+                <section id="view-commands" class="view">
+                    <div class="view-header">
+                        <h1>Creador de Comandos</h1>
+                        <span class="view-subtitle mono">Inyecta comandos /slash sin reiniciar</span>
+                    </div>
+                    <div class="config-grid">
+                        <div class="panel p4">
+                            <div class="panel-head"><span>Nuevo Comando</span></div>
+                            <div class="field-stack mt3">
+                                <div class="field">
+                                    <label>Nombre del comando</label>
+                                    <div class="slash-input-wrap">
+                                        <span class="slash-prefix mono">/</span>
+                                        <input type="text" class="inp" id="cmd-name" placeholder="reglas" style="border-radius:0 6px 6px 0;">
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label>Descripción breve</label>
+                                    <input type="text" class="inp" id="cmd-desc" placeholder="Muestra las reglas del servidor">
+                                </div>
+                                <div class="field">
+                                    <label>Título del embed <span class="hint">— dejar vacío para texto plano</span></label>
+                                    <input type="text" class="inp" id="cmd-title" placeholder="📋 Reglas">
+                                </div>
+                                <div class="field">
+                                    <label>Contenido <span class="hint">— soporta **negrita** *cursiva*</span></label>
+                                    <textarea class="inp mono" id="cmd-text" rows="5" placeholder="Escribe aquí el contenido..."></textarea>
+                                </div>
+                                <div class="field">
+                                    <label>Color del embed</label>
+                                    <div class="color-row">
+                                        <input type="color" class="color-pick" id="cmd-color" value="#6366f1">
+                                        <span class="mono" id="cmd-color-label">#6366f1</span>
+                                    </div>
+                                </div>
+                                <button class="btn-primary full-w" id="btn-save-command">
+                                    <i class="fa-solid fa-satellite-dish"></i> Inyectar en Discord
+                                </button>
+                            </div>
+                        </div>
+                        <div class="panel p4">
+                            <div class="panel-head"><span>Preview en Discord</span></div>
+                            <div class="discord-mock">
+                                <div class="mock-msg">
+                                    <img class="mock-avatar" src="https://cdn.discordapp.com/embed/avatars/0.png">
+                                    <div class="mock-body">
+                                        <div class="mock-author">Oversee <span class="bot-tag">APP</span> <span class="mock-ts mono">Hoy a las 12:00</span></div>
+                                        <div class="discord-embed" id="live-embed">
+                                            <div class="embed-title" id="preview-title">Título del Embed</div>
+                                            <div class="embed-desc mono" id="preview-desc">Descripción del mensaje...</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Lista de comandos activos -->
+                            <div class="panel-head mt3"><span>Comandos activos</span></div>
+                            <div id="cmd-list" class="cmd-list-wrap">
+                                <div class="empty-state mono">Cargando comandos...</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- BIENVENIDAS CUSTOM -->
+                <section id="view-welcome" class="view">
+                    <div class="view-header">
+                        <h1>Mensajes de Bienvenida</h1>
+                        <span class="view-subtitle mono">Configuración detallada del embed de entrada</span>
+                    </div>
+                    <div class="panel p4">
+                        <p class="muted-text">Configura los mensajes de bienvenida desde la sección <strong>General</strong>. Esta vista muestra el historial reciente de bienvenidas.</p>
+                        <div class="welcome-log" id="welcome-log">
+                            <div class="empty-state mono">Sin actividad reciente...</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- NIVELES (PREMIUM LOCKED) -->
+                <section id="view-levels" class="view">
+                    <div class="view-header">
+                        <h1>Sistema de Niveles</h1>
+                        <span class="view-subtitle mono">Función exclusiva Premium</span>
+                    </div>
+                    <div class="premium-gate">
+                        <div class="gate-icon"><i class="fa-solid fa-lock"></i></div>
+                        <h2>Función Premium</h2>
+                        <p>El sistema de niveles XP con tarjetas personalizables, roles por nivel y tabla de clasificación está disponible en el plan <strong>PRO</strong>.</p>
+                        <button class="btn-upgrade" onclick="document.querySelector('[data-target=view-premium]').click()">
+                            <i class="fa-solid fa-star"></i> Ver planes Premium
+                        </button>
+                    </div>
+                </section>
+
+                <!-- PREMIUM -->
+                <section id="view-premium" class="view">
+                    <div class="view-header">
+                        <h1>Planes Oversee</h1>
+                        <span class="view-subtitle mono">Elige el nivel que tu servidor necesita</span>
+                    </div>
+                    <div class="pricing-grid">
+                        <!-- FREE -->
+                        <div class="pricing-card">
+                            <div class="pricing-top">
+                                <div class="plan-name">FREE</div>
+                                <div class="plan-price mono">€0<span>/mes</span></div>
+                                <div class="plan-sub">Para servidores pequeños</div>
+                            </div>
+                            <ul class="feature-list">
+                                <li class="ok"><i class="fa-solid fa-check"></i> Automod básico (spam + links)</li>
+                                <li class="ok"><i class="fa-solid fa-check"></i> Sistema de tickets (1 tipo)</li>
+                                <li class="ok"><i class="fa-solid fa-check"></i> Logs de moderación</li>
+                                <li class="ok"><i class="fa-solid fa-check"></i> 5 comandos personalizados</li>
+                                <li class="no"><i class="fa-solid fa-xmark"></i> Sistema de niveles XP</li>
+                                <li class="no"><i class="fa-solid fa-xmark"></i> Análisis avanzado</li>
+                                <li class="no"><i class="fa-solid fa-xmark"></i> Estado del bot personalizado</li>
+                                <li class="no"><i class="fa-solid fa-xmark"></i> Múltiples tipos de tickets</li>
+                            </ul>
+                            <button class="btn-plan current">Plan actual</button>
+                        </div>
+                        <!-- PRO -->
+                        <div class="pricing-card featured">
+                            <div class="feat-badge">MÁS POPULAR</div>
+                            <div class="pricing-top">
+                                <div class="plan-name">PRO</div>
+                                <div class="plan-price mono">€4.99<span>/mes</span></div>
+                                <div class="plan-sub">Para comunidades activas</div>
+                            </div>
+                            <ul class="feature-list">
+                                <li class="ok"><i class="fa-solid fa-check"></i> Todo lo de Free</li>
+                                <li class="ok"><i class="fa-solid fa-check"></i> Sistema de niveles XP completo</li>
+                                <li class="ok"><i class="fa-solid fa-check"></i> Tarjetas de rango personalizables</li>
+                                <li class="ok"><i class="fa-solid fa-check"></i> Hasta 50 comandos custom</li>
+                                <li class="ok"><i class="fa-solid fa-check"></i> Anti-raid avanzado</li>
+                                <li class="ok"><i class="fa-solid fa-check"></i> Dashboard analítico completo</li>
+                                <li class="ok"><i class="fa-solid fa-check"></i> Múltiples tipos de tickets</li>
+                                <li class="ok"><i class="fa-solid fa-check"></i> Estado del bot personalizado</li>
+                            </ul>
+                            <button class="btn-plan upgrade">
+                                <i class="fa-solid fa-arrow-right"></i> Activar Pro
+                            </button>
+                        </div>
+                        <!-- ENTERPRISE -->
+                        <div class="pricing-card">
+                            <div class="pricing-top">
+                                <div class="plan-name">ENTERPRISE</div>
+                                <div class="plan-price mono">Contactar<span></span></div>
+                                <div class="plan-sub">Para redes de servidores</div>
+                            </div>
+                            <ul class="feature-list">
+                                <li class="ok"><i class="fa-solid fa-check"></i> Todo lo de Pro</li>
+                                <li class="ok"><i class="fa-solid fa-check"></i> Bot con tu propio branding</li>
+                                <li class="ok"><i class="fa-solid fa-check"></i> Gestión multi-servidor</li>
+                                <li class="ok"><i class="fa-solid fa-check"></i> API privada con webhooks</li>
+                                <li class="ok"><i class="fa-solid fa-check"></i> Soporte técnico dedicado</li>
+                                <li class="ok"><i class="fa-solid fa-check"></i> SLA de uptime garantizado</li>
+                                <li class="ok"><i class="fa-solid fa-check"></i> Comandos ilimitados</li>
+                                <li class="ok"><i class="fa-solid fa-check"></i> Integraciones personalizadas</li>
+                            </ul>
+                            <a href="" target="_blank" class="btn-plan contact">
+                                <i class="fa-solid fa-headset"></i> Hablar con ventas
+                            </a>
+                        </div>
+                    </div>
+                </section>
+
+            </div><!-- /content-area -->
+        </div><!-- /main-wrap -->
+    </div><!-- /shell -->
+
+    <div id="toast-container"></div>
+    <script src="js/app.js"></script>
+</body>
+</html>
