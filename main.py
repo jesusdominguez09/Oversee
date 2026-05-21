@@ -22,6 +22,7 @@ from dotenv import load_dotenv
 from backend.security_cog import SecurityModule
 from backend.ticket_cog import TicketModule
 from backend.dynamic_commands import DynamicCommands
+from backend.setup_cog import SetupCommands
 
 # ── INIT & GLOBALES ──────────────────────────────────────────────
 load_dotenv()
@@ -172,9 +173,24 @@ async def delete_command(cmd_id: int):
 
 # ── CONFIG ENDPOINTS ─────────────────────────────────────────────
 @app.post("/api/config/{section}")
-async def save_config(section: str):
-    """Endpoint para guardar configuración de cualquier sección"""
+async def save_config(section: str, payload: dict):
+    """Endpoint para guardar configuración de cualquier sección en la BD"""
+    if not db_pool:
+        raise HTTPException(status_code=503, detail="Base de datos no disponible")
+    
     guild_id = os.getenv("GUILD_ID", "0")
+    
+    # Guardar cada clave de configuración en la BD
+    for key, value in payload.items():
+        try:
+            await db_pool.execute(
+                "INSERT OR REPLACE INTO guild_config_kv (guild_id, key, value) VALUES (?, ?, ?)",
+                (guild_id, f"{section}_{key}", str(value))
+            )
+        except Exception as e:
+            print(f"Error guardando config: {e}")
+    
+    await db_pool.commit()
     await broadcast("config_update", {"section": section, "guild_id": guild_id})
     return {"ok": True, "section": section}
 
@@ -199,6 +215,7 @@ async def on_ready():
     # Cargar módulos
     await bot.add_cog(SecurityModule(bot, db_pool, broadcast))
     await bot.add_cog(TicketModule(bot, db_pool, broadcast))
+    await bot.add_cog(SetupCommands(bot, db_pool, broadcast))
     await bot.add_cog(DynamicCommands(bot, db_pool))
 
     guild_id = int(os.getenv("GUILD_ID", 0))
