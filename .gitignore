@@ -1,0 +1,19 @@
+# Crear .gitignore con .env y otros archivos sensibles
+@"
+.env
+.env.local
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+*.log
+"@ | Set-Content .gitignore -Encoding UTF8
+
+# Remover .env del historio de git
+git rm --cached .env
+
+# Commit estos cambios
+git commit -m "Add .gitignore and remove .env from tracking"
+
+# Intentar push
+git push origin main
